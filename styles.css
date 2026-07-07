@@ -47,7 +47,7 @@ body {
 
 .layout {
   width: min(1320px, 96vw);
-  margin: 6rem auto 4rem;
+  margin: 1rem auto 4rem;
 }
 
 .hero h1 {
@@ -67,6 +67,43 @@ body {
 }
 
 .hero p { margin: .5rem 0 0; }
+
+.value-boxes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.75rem 0 1.25rem;
+}
+
+.value-box {
+  background: linear-gradient(135deg, rgba(0,47,42,0.98), rgba(97,18,50,0.92));
+  color: #fff;
+  border-radius: 18px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .12);
+}
+
+.value-box-label {
+  margin: 0;
+  font-size: .88rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.78);
+}
+
+.value-box-number {
+  margin: .35rem 0 .2rem;
+  font-family: "Archivo Black", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.value-box-detail {
+  margin: 0;
+  font-size: .95rem;
+  color: rgba(255,255,255,.86);
+}
 
 .tabs {
   display: flex;
@@ -114,13 +151,13 @@ body {
   border: 2px solid rgba(0,47,42,.1);
   border-radius: 14px;
   padding: .4rem;
-  min-height: 430px;
+  min-height: 180px;
   background: #fff;
 }
 
 .chart {
   width: 100%;
-  height: 410px;
+  min-height: 180px;
 }
 
 @media (max-width: 1100px) {
@@ -129,11 +166,7 @@ body {
   }
 
   .chart-card {
-    min-height: 380px;
-  }
-
-  .chart {
-    height: 360px;
+    min-height: 180px;
   }
 }
 
@@ -193,7 +226,11 @@ tbody tr:nth-child(even) { background: #faf8f3; }
 
 @media (max-width: 700px) {
   .layout {
-    margin-top: 7.2rem;
+    margin-top: 3.4rem;
+  }
+
+  .value-boxes {
+    grid-template-columns: 1fr;
   }
 
   .logo {

@@ -3,12 +3,57 @@ const tabsRoot = document.getElementById('tabs');
 const tablesRoot = document.getElementById('tables-root');
 const graphPanel = document.getElementById('panel-graficas');
 const subtitle = document.getElementById('subtitle');
+const unidadesRegistroEl = document.getElementById('value-unidades-registro');
+const unidadesRegistroDetailEl = document.getElementById('value-unidades-registro-detail');
+const unidadesCompletasEl = document.getElementById('value-unidades-completas');
+const unidadesCompletasDetailEl = document.getElementById('value-unidades-completas-detail');
 
 if (data.title) document.title = data.title;
 if (subtitle) {
   const nTables = Object.keys(data.tables || {}).length;
   const nCharts = (data.figures || []).length;
   subtitle.textContent = `Visualizacion general con ${nCharts} grafica(s) y ${nTables} tabla(s).`;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat('es-MX').format(value || 0);
+}
+
+function calculateSummaryMetrics() {
+  const avanceRows = data.tables?.tabla_avance?.rows || [];
+  const entidadesRows = data.tables?.tabla_entidades?.rows || [];
+
+  const totalUnidades = avanceRows.reduce((sum, row) => sum + Number(row.total_unidades || 0), 0);
+  const unidadesConRegistro = avanceRows.reduce((sum, row) => sum + Number(row.unidades_respondieron || 0), 0);
+  const unidadesCompletas = entidadesRows.reduce((sum, row) => {
+    return Number(row.porcentaje || 0) >= 100 ? sum + Number(row.unidades || 0) : sum;
+  }, 0);
+
+  return {
+    totalUnidades,
+    unidadesConRegistro,
+    unidadesCompletas,
+  };
+}
+
+function renderSummaryMetrics() {
+  const metrics = calculateSummaryMetrics();
+  const porcentajeCompletas = metrics.unidadesConRegistro
+    ? (metrics.unidadesCompletas / metrics.unidadesConRegistro) * 100
+    : 0;
+
+  if (unidadesRegistroEl) {
+    unidadesRegistroEl.textContent = formatNumber(metrics.unidadesConRegistro);
+  }
+  if (unidadesRegistroDetailEl) {
+    unidadesRegistroDetailEl.textContent = `de ${formatNumber(metrics.totalUnidades)} unidades totales`;
+  }
+  if (unidadesCompletasEl) {
+    unidadesCompletasEl.textContent = formatNumber(metrics.unidadesCompletas);
+  }
+  if (unidadesCompletasDetailEl) {
+    unidadesCompletasDetailEl.textContent = `${porcentajeCompletas.toFixed(1)}% de las unidades con registro`;
+  }
 }
 
 function activatePanel(panelId, button) {
@@ -35,53 +80,10 @@ function createTab(label, panelId, isActive = false) {
   if (isActive) btn.classList.add('active');
 }
 
-function normalizeLayout(layout = {}) {
-  return {
-    ...layout,
-    autosize: true,
-    margin: { l: 60, r: 30, t: 70, b: 60, ...(layout.margin || {}) },
-    legend: {
-      orientation: 'h',
-      y: -0.2,
-      x: 0,
-      ...(layout.legend || {}),
-    },
-  };
-}
-
-function isDonutOrPieFigure(figure = {}) {
-  const traces = figure.data || [];
-  return traces.some(trace => {
-    const t = String(trace.type || '').toLowerCase();
-    return t === 'pie';
-  });
-}
-
-function getFigureTitle(figure = {}) {
-  const rawTitle = figure?.layout?.title;
-  if (typeof rawTitle === 'string') return rawTitle.trim().toLowerCase();
-  if (rawTitle && typeof rawTitle.text === 'string') {
-    return rawTitle.text.replace(/<[^>]*>/g, '').trim().toLowerCase();
-  }
-  return '';
-}
-
-function renderGraphs() {
-  graphPanel.className = 'panel active';
-  const wrap = document.createElement('div');
-  wrap.className = 'grid';
-  graphPanel.appendChild(wrap);
-
+function getRenderableFigures() {
   const seen = new Set();
-  const seenTitles = new Set();
-  const figures = (data.figures || []).filter(item => {
+  return (data.figures || []).filter(item => {
     const figure = item.figure || {};
-    const title = getFigureTitle(figure);
-    if (title) {
-      if (seenTitles.has(title)) return false;
-      seenTitles.add(title);
-    }
-
     const signature = JSON.stringify({
       data: figure.data || [],
       layout: figure.layout || {},
@@ -90,6 +92,15 @@ function renderGraphs() {
     seen.add(signature);
     return true;
   });
+}
+
+function renderGraphs() {
+  graphPanel.className = 'panel active';
+  const wrap = document.createElement('div');
+  wrap.className = 'grid';
+  graphPanel.appendChild(wrap);
+
+  const figures = getRenderableFigures();
 
   if (subtitle) {
     const nTables = Object.keys(data.tables || {}).length;
@@ -107,10 +118,15 @@ function renderGraphs() {
     wrap.appendChild(card);
 
     const figure = item.figure || {};
-    const baseLayout = normalizeLayout(figure.layout || {});
-    const finalLayout = isDonutOrPieFigure(figure)
-      ? { ...baseLayout, showlegend: false }
-      : baseLayout;
+    const finalLayout = {
+      ...(figure.layout || {}),
+      autosize: true,
+    };
+
+    if (typeof figure?.layout?.height === 'number') {
+      el.style.height = `${figure.layout.height}px`;
+      card.style.minHeight = `${Math.max(figure.layout.height + 20, 180)}px`;
+    }
 
     Plotly.react(chartId, figure.data || [], finalLayout, {
       responsive: true,
@@ -177,6 +193,7 @@ function renderTablePanel(name, tableData) {
 }
 
 createTab('Principal - Graficas', 'panel-graficas', true);
+renderSummaryMetrics();
 renderGraphs();
 
 Object.entries(data.tables || {}).forEach(([name, tableData]) => {
