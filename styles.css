@@ -68,6 +68,13 @@ body {
 
 .hero p { margin: .5rem 0 0; }
 
+.updated-at {
+  margin-top: .45rem;
+  font-size: .85rem;
+  color: rgba(16, 33, 30, .75);
+  font-weight: 600;
+}
+
 .value-boxes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

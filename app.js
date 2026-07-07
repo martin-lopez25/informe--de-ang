@@ -3,6 +3,7 @@ const tabsRoot = document.getElementById('tabs');
 const tablesRoot = document.getElementById('tables-root');
 const graphPanel = document.getElementById('panel-graficas');
 const subtitle = document.getElementById('subtitle');
+const updatedAtEl = document.getElementById('updated-at');
 const unidadesRegistroEl = document.getElementById('value-unidades-registro');
 const unidadesRegistroDetailEl = document.getElementById('value-unidades-registro-detail');
 const unidadesCompletasEl = document.getElementById('value-unidades-completas');
@@ -13,6 +14,15 @@ if (subtitle) {
   const nTables = Object.keys(data.tables || {}).length;
   const nCharts = (data.figures || []).length;
   subtitle.textContent = `Visualizacion general con ${nCharts} grafica(s) y ${nTables} tabla(s).`;
+}
+
+if (updatedAtEl) {
+  const now = new Date();
+  const fechaHora = now.toLocaleString('es-MX', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  updatedAtEl.textContent = `Actualizado: ${fechaHora}`;
 }
 
 function formatNumber(value) {
