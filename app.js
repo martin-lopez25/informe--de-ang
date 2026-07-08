@@ -9,6 +9,67 @@ const unidadesRegistroDetailEl = document.getElementById('value-unidades-registr
 const unidadesCompletasEl = document.getElementById('value-unidades-completas');
 const unidadesCompletasDetailEl = document.getElementById('value-unidades-completas-detail');
 
+const updateStorePrefix = `dashboard-update:${window.location.pathname}`;
+
+function parseValidDate(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getDataSignature() {
+  try {
+    return JSON.stringify({
+      tables: data.tables || {},
+      figures: data.figures || [],
+    });
+  } catch {
+    return '';
+  }
+}
+
+function readStoredUpdateInfo() {
+  try {
+    return {
+      signature: localStorage.getItem(`${updateStorePrefix}:signature`),
+      updatedAt: localStorage.getItem(`${updateStorePrefix}:updatedAt`),
+    };
+  } catch {
+    return { signature: null, updatedAt: null };
+  }
+}
+
+function writeStoredUpdateInfo(signature, updatedAt) {
+  try {
+    localStorage.setItem(`${updateStorePrefix}:signature`, signature);
+    localStorage.setItem(`${updateStorePrefix}:updatedAt`, updatedAt.toISOString());
+  } catch {
+    // Ignorar si el navegador bloquea localStorage.
+  }
+}
+
+function resolveDataUpdatedAt() {
+  const signature = getDataSignature();
+  const fromData = parseValidDate(
+    data.updated_at || data.updatedAt || data.last_updated || data.lastUpdated
+  );
+
+  if (fromData) {
+    writeStoredUpdateInfo(signature, fromData);
+    return fromData;
+  }
+
+  const stored = readStoredUpdateInfo();
+  if (stored.signature === signature) {
+    const storedDate = parseValidDate(stored.updatedAt);
+    if (storedDate) return storedDate;
+  }
+
+  const now = new Date();
+  writeStoredUpdateInfo(signature, now);
+  return now;
+}
+
 if (data.title) document.title = data.title;
 if (subtitle) {
   const nTables = Object.keys(data.tables || {}).length;
@@ -17,8 +78,8 @@ if (subtitle) {
 }
 
 if (updatedAtEl) {
-  const now = new Date();
-  const fechaHora = now.toLocaleString('es-MX', {
+  const updatedAt = resolveDataUpdatedAt();
+  const fechaHora = updatedAt.toLocaleString('es-MX', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
