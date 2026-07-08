@@ -6,6 +6,8 @@ const subtitle = document.getElementById('subtitle');
 const updatedAtEl = document.getElementById('updated-at');
 const unidadesRegistroEl = document.getElementById('value-unidades-registro');
 const unidadesRegistroDetailEl = document.getElementById('value-unidades-registro-detail');
+const estadosRegistroEl = document.getElementById('value-estados-registro');
+const estadosRegistroDetailEl = document.getElementById('value-estados-registro-detail');
 const unidadesCompletasEl = document.getElementById('value-unidades-completas');
 const unidadesCompletasDetailEl = document.getElementById('value-unidades-completas-detail');
 
@@ -94,6 +96,10 @@ function calculateSummaryMetrics() {
   const avanceRows = data.tables?.tabla_avance?.rows || [];
   const entidadesRows = data.tables?.tabla_entidades?.rows || [];
 
+  const totalEstados = avanceRows.length;
+  const estadosConRegistro = avanceRows.reduce((sum, row) => {
+    return Number(row.unidades_respondieron || 0) > 0 ? sum + 1 : sum;
+  }, 0);
   const totalUnidades = avanceRows.reduce((sum, row) => sum + Number(row.total_unidades || 0), 0);
   const unidadesConRegistro = avanceRows.reduce((sum, row) => sum + Number(row.unidades_respondieron || 0), 0);
   const unidadesCompletas = entidadesRows.reduce((sum, row) => {
@@ -101,6 +107,8 @@ function calculateSummaryMetrics() {
   }, 0);
 
   return {
+    totalEstados,
+    estadosConRegistro,
     totalUnidades,
     unidadesConRegistro,
     unidadesCompletas,
@@ -118,6 +126,12 @@ function renderSummaryMetrics() {
   }
   if (unidadesRegistroDetailEl) {
     unidadesRegistroDetailEl.textContent = `de ${formatNumber(metrics.totalUnidades)} unidades totales`;
+  }
+  if (estadosRegistroEl) {
+    estadosRegistroEl.textContent = formatNumber(metrics.estadosConRegistro);
+  }
+  if (estadosRegistroDetailEl) {
+    estadosRegistroDetailEl.textContent = `de ${formatNumber(metrics.totalEstados)} estados totales`;
   }
   if (unidadesCompletasEl) {
     unidadesCompletasEl.textContent = formatNumber(metrics.unidadesCompletas);
